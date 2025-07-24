@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>多项式拟合结果汇总</title>
+    <link href='http://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <style>
+        :root {
+            --container-width: 50;  /* 占位值，运行时替换 */
+        }
+
+        body {
+            font-family: 'Raleway', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .chart-container {
+            float: left;
+            width: calc(var(--container-width) * 1%);  /* 替换为动态值 */
+            box-sizing: border-box;
+            padding: 15px;
+        }
+        .chart-wrapper {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+        .chart-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 15px;
+        }
+        h1 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        .clearfix {
+            clear: both;
+        }
+        .fit-info {
+            background: linear-gradient(120deg, #e0f7fa, #bbdefb);
+            border-left: 5px solid #01579b;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 0 6px 6px 0;
+            font-size: 15px;
+            font-weight: 500;
+            color: #01579b;
+        }
+    </style>
+</head>
+<body>
+    <h1>多项式拟合结果汇总</h1>
+    <!-- CHART_DIVS_PLACEHOLDER -->  <!-- 替换点 -->
+    <div class="clearfix"></div>
+</body>
+</html>
