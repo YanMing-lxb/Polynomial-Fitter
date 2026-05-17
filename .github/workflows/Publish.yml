@@ -41,8 +41,9 @@ jobs:
     - name: Compress executable to 7z
       run: |
         $distPath = "${{ github.workspace }}\dist\Polynomial-Fitter"
+        $dataXlsxPath = "${{ github.workspace }}\data.xlsx"
         $7zPath = "${{ github.workspace }}\dist\Polynomial-Fitter-${{ github.ref_name }}.7z"
-        7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $7zPath $distPath
+        7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $7zPath $distPath $dataXlsxPath
       shell: pwsh
 
     - name: List dist directory contents
@@ -108,4 +109,3 @@ jobs:
         name: Polynomial-Fitter ${{ env.TAG_NAME }}
         files: |
           dist/Polynomial-Fitter-*.7z
-          dist/Polynomial-Fitter/Polynomial-Fitter.exe
