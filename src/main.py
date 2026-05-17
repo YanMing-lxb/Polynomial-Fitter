@@ -57,6 +57,22 @@ def read_excel_data(file_path: str) -> dict[str, np.ndarray]:
 
         combined_headers = [tuple(pair) for pair in zip(header_row1, header_row2)]
 
+        def to_numeric(value):
+            """将值转换为数值类型，处理字符串、空值等特殊情况"""
+            if value is None:
+                return np.nan
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                value = value.strip()
+                if value == "" or value.lower() in ["nan", "none", ""]:
+                    return np.nan
+                try:
+                    return float(value)
+                except ValueError:
+                    return np.nan
+            return np.nan
+
         # 初始化每列的数据列表
         data_dict = {header: [] for header in combined_headers}
 
@@ -64,10 +80,18 @@ def read_excel_data(file_path: str) -> dict[str, np.ndarray]:
         for row in rows[2:]:
             for i, value in enumerate(row):
                 if i < len(combined_headers):
-                    data_dict[combined_headers[i]].append(value)
+                    numeric_value = to_numeric(value)
+                    data_dict[combined_headers[i]].append(numeric_value)
 
         # 转换为 NumPy 数组并返回
-        return {k: np.array(v) for k, v in data_dict.items()}
+        result = {}
+        for k, v in data_dict.items():
+            arr = np.array(v, dtype=float)
+            valid_count = np.sum(~np.isnan(arr))
+            if valid_count == 0:
+                console.print(f"[yellow]警告：'{' '.join(k)}' 列没有有效数值数据[/yellow]")
+            result[k] = arr
+        return result
 
     except Exception as e:
         raise RuntimeError(f"读取 Excel 数据时出错: {e}") from e
@@ -118,6 +142,15 @@ def fit_polynomial(
             results[dependent_var] = {"error": "ydata 必须为 numpy 数组"}
             continue
 
+        # 过滤掉包含NaN的数据点
+        valid_mask = ~(np.isnan(xdata) | np.isnan(ydata))
+        x_clean = xdata[valid_mask]
+        y_clean = ydata[valid_mask]
+
+        if len(x_clean) < 2:
+            results[dependent_var] = {"error": f"'{dependent_var}' 列有效数据点少于2个"}
+            continue
+
         if len(xdata) != len(ydata):
             results[dependent_var] = {"error": "xdata 与 ydata 长度不一致"}
             continue
@@ -131,24 +164,24 @@ def fit_polynomial(
 
             try:
                 coefficients, _ = curve_fit(
-                    polynomial_fit, xdata, ydata, maxfev=10000, p0=p0
+                    polynomial_fit, x_clean, y_clean, maxfev=10000, p0=p0
                 )
             except Exception:
                 results[dependent_var] = {"error": "无法拟合"}
                 break
 
             # 计算拟合优度指标 R² 和调整 R²
-            y_fit = polynomial_fit(xdata, *coefficients)
-            residuals = ydata - y_fit
+            y_fit = polynomial_fit(x_clean, *coefficients)
+            residuals = y_clean - y_fit
             ss_res = np.sum(residuals**2)
-            ss_tot = np.sum((ydata - np.mean(ydata)) ** 2)
+            ss_tot = np.sum((y_clean - np.mean(y_clean)) ** 2)
 
             if ss_tot == 0:
                 r_squared = 1.0  # 所有值相同，完全拟合
             else:
                 r_squared = 1 - (ss_res / ss_tot)
 
-            n = len(ydata)
+            n = len(y_clean)
             if n - degree - 1 == 0:
                 adj_r_squared = np.nan  # 无法计算调整 R²
             else:
