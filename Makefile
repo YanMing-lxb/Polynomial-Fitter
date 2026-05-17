@@ -12,24 +12,12 @@ all:
 clean:
 	$(UV_RUN) $(TOOLS_DIR)/utils.py clean
 
-# 文档生成
-html:
-	$(UV_RUN) $(TOOLS_DIR)/make.py html
-
 rst:
 	$(UV_RUN) $(TOOLS_DIR)/make.py rst
 
-# 构建wheel包
-whl: clean
-	@uv build
-
 # 打包可执行文件
-pack:
+pack: clean
 	$(UV_RUN) $(TOOLS_DIR)/pack.py pack
-
-# 安装wheel包测试
-inswhl:
-	$(UV_RUN) $(TOOLS_DIR)/make.py inswhl
 
 # 上传标签
 upload:

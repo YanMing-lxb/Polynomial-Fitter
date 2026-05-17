@@ -188,7 +188,9 @@ def main():
     parser = argparse.ArgumentParser(description="Python 项目打包工具")
     parser.add_argument(
         "mode",
+        nargs="?",
         choices=["pack", "setup"],
+        default="pack",
         help="打包模式: pack (打包程序), setup (构建安装包)",
     )
     parser.add_argument(
@@ -199,17 +201,22 @@ def main():
         help="指定打包工具，默认使用 flet",
     )
     parser.add_argument(
-        "--clean", "-c", action="store_true", help="清理 Cython 编译源码目录 SRCPYD_DIR"
+        "--clean", "-c", action="store_true", help="清理打包产物和临时文件"
     )
     args = parser.parse_args()
 
     tracker = PerformanceTracker()
 
+    if args.clean:
+        console.rule(f"[bold]🧹 {PROJECT_NAME} 清理系统[/]")
+        clean_up()
+        sys.exit(0)
+
     try:
         console.rule(f"[bold]🚀 {PROJECT_NAME} 打包系统[/]")
 
         steps = []
-        if not args.clean and args.mode != "setup":
+        if args.mode != "setup":
             # 删除 dist 下的项目文件夹
             delete_result, delete_performance_data = tracker.execute_with_timing(
                 delete_dist_project_folder, "删除旧打包"

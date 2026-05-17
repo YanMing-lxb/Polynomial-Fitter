@@ -25,4 +25,4 @@ Description  :
 # -*- coding: utf-8 -*-
 
 script_name = "Polynomial-Fitter"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
