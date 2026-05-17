@@ -42,8 +42,10 @@ jobs:
       run: |
         $distPath = "${{ github.workspace }}\dist\Polynomial-Fitter"
         $dataXlsxPath = "${{ github.workspace }}\data.xlsx"
+        $targetDataPath = "${{ github.workspace }}\dist\Polynomial-Fitter\data.xlsx"
+        Copy-Item -Path $dataXlsxPath -Destination $targetDataPath
         $7zPath = "${{ github.workspace }}\dist\Polynomial-Fitter-${{ github.ref_name }}.7z"
-        7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $7zPath $distPath $dataXlsxPath
+        7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $7zPath $distPath
       shell: pwsh
 
     - name: List dist directory contents
