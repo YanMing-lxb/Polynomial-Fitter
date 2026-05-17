@@ -103,9 +103,9 @@ jobs:
     - name: Publish to GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        body_path: ${{ github.workspace }}-CHANGELOG.txt
-        token: ${{ secrets.PUBLISH_POLYNOMIAL_FITTER }}
-        name: Polynomial-Fitter ${{ github.ref_name }}
+        body_path: CHANGELOG_RELEASE.txt
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Polynomial-Fitter ${{ env.TAG_NAME }}
         files: |
           dist/Polynomial-Fitter-*.7z
           dist/Polynomial-Fitter/Polynomial-Fitter.exe
