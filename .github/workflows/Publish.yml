@@ -1,0 +1,111 @@
+name: Publish Polynomial-Fitter �
+on:
+  push:
+    tags:
+      - v*.*.*
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows Executable
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: 安装 uv
+      uses: astral-sh/setup-uv@v5
+
+    - name: 安装 Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: "pyproject.toml"
+
+    - name: 安装项目
+      run: uv sync --locked --all-extras --dev
+
+    - name: 安装 7zip
+      run: choco install 7zip -y
+      shell: pwsh
+
+    - name: Build 📦 executable
+      run: |
+        cd ${{ github.workspace }}
+        $env:PYTHONIOENCODING = "utf-8"
+        uv run ${{ github.workspace }}\tools\pack.py pack
+      shell: pwsh
+
+    - name: Compress executable to 7z
+      run: |
+        $distPath = "${{ github.workspace }}\dist\Polynomial-Fitter"
+        $7zPath = "${{ github.workspace }}\dist\Polynomial-Fitter-${{ github.ref_name }}.7z"
+        7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $7zPath $distPath
+      shell: pwsh
+
+    - name: List dist directory contents
+      run: ls -R dist/
+
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: polynomial-fitter-executable
+        path: |
+          dist/Polynomial-Fitter-*.7z
+          dist/Polynomial-Fitter/
+
+  publish-to-github-release:
+    name: Publish 📦 to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-windows
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Download Windows executable
+      uses: actions/download-artifact@v4
+      with:
+        name: polynomial-fitter-executable
+        path: dist/
+
+    - name: Display structure of downloaded files
+      run: ls -R dist/
+
+    - name: Extract tag name
+      id: extract_tag
+      run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+    - name: Generate Changelog
+      run: |
+        if [ -f "${{ github.workspace }}/CHANGELOG.md" ]; then
+          changelog=$(cat ${{ github.workspace }}/CHANGELOG.md)
+          tag_name=${{ env.TAG_NAME }}
+          version_header="## $tag_name"
+          if [[ $changelog == *"$version_header"* ]]; then
+            version_content=$(echo "$changelog" | awk -v version_header="$version_header" '
+              /^## / { if (p) exit; p=0 }
+              $0 ~ version_header { p=1; next }
+              p')
+            echo "$version_content"
+          else
+            echo "Version $tag_name not found in CHANGELOG.md"
+          fi
+          echo "$version_content" > ${{ github.workspace }}-CHANGELOG.txt
+        else
+          echo "No CHANGELOG.md found, using default message" > ${{ github.workspace }}-CHANGELOG.txt
+          echo "Polynomial-Fitter $tag_name Release" >> ${{ github.workspace }}-CHANGELOG.txt
+        fi
+
+    - name: Publish to GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        body_path: ${{ github.workspace }}-CHANGELOG.txt
+        token: ${{ secrets.PUBLISH_POLYNOMIAL_FITTER }}
+        name: Polynomial-Fitter ${{ github.ref_name }}
+        files: |
+          dist/Polynomial-Fitter-*.7z
+          dist/Polynomial-Fitter/Polynomial-Fitter.exe
